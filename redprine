@@ -10,6 +10,8 @@ GITHUB_USERNAME=''
 
 REDMINE_BASE_URL=''
 
+CACHE_FILE="$HOME/redprine.json"
+
 function github_owner_repo () {
 	local git_remote=$(git remote get-url origin)
 	local owner_repo=$(echo "$git_remote" |
@@ -50,7 +52,7 @@ function cache_my_pull_requests () {
 			)'
 	)
 
-	echo $my_pull_requests
+	echo $my_pull_requests > "$CACHE_FILE"
 }
 
 # branch_heads=$(printf "%s\n" "$pull_requests" |
