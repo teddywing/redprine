@@ -7,6 +7,7 @@
 
 GITHUB_TOKEN=''
 GITHUB_USERNAME=''
+GITHUB_OWNER_REPO=''
 
 REDMINE_BASE_URL=''
 REDMINE_TOKEN=''
@@ -16,15 +17,18 @@ CACHE_FILE="$HOME/redprine.json"
 
 function print_usage () {
 	cat 1>&2 <<__EOF__
-Usage: redprine --github-token TOKEN --github-username USERNAME --redmine-base-url URL --redmine-token TOKEN
+Usage: redprine --github-token TOKEN --github-username USERNAME --github-owner-repo OWNER_REPO --redmine-base-url URL --redmine-token TOKEN
 
 Flags:
-      --github-token=TOKEN        GitHub API token with pull request access.
-      --github-username=USERNAME  GitHub username.
-      --redmine-base-url=URL      Base Redmine URL (e.g. 'https://redmine.eaglejump.co')
-      --redmine-token=TOKEN       Redmine account API key
-  -h, --help                      Show this help.
-  -v, --version                   Show application version.
+      --github-token=TOKEN            GitHub API token with pull request access.
+      --github-username=USERNAME      GitHub username.
+      --github-owner-repo=OWNER_REPO  The owner and repo get pull requests for
+                                      (e.g. 'org_or_username/my-repo').
+      --redmine-base-url=URL          Base Redmine URL
+                                      (e.g. 'https://redmine.eaglejump.co').
+      --redmine-token=TOKEN           Redmine account API key
+  -h, --help                          Show this help.
+  -v, --version                       Show application version.
 __EOF__
 }
 
@@ -237,6 +241,18 @@ function parse_arguments () {
 			shift
 			continue
 			;;
+		--github-owner-repo)
+			GITHUB_OWNER_REPO="$2"
+
+			shift 2
+			continue
+			;;
+		--github-owner-repo=*)
+			GITHUB_OWNER_REPO="${1##--github-owner-repo=}"
+
+			shift
+			continue
+			;;
 		--redmine-base-url)
 			REDMINE_BASE_URL="$2"
 
@@ -279,6 +295,7 @@ function parse_arguments () {
 
 	check_required_argument '--github-token' "$GITHUB_TOKEN"
 	check_required_argument '--github-username' "$GITHUB_USERNAME"
+	check_required_argument '--github-owner-repo' "$GITHUB_OWNER_REPO"
 	check_required_argument '--redmine-base-url' "$REDMINE_BASE_URL"
 	check_required_argument '--redmine-token' "$REDMINE_TOKEN"
 }
