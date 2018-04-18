@@ -166,14 +166,13 @@ function update_cache_with_new_pulls () {
 	mv "${CACHE_FILE}.new" "$CACHE_FILE"
 }
 
+function main () {
+	local pr_json=$(new_pull_requests)
+	local issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
 
-
-# pr_json=$(new_pull_requests)
-# issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
-#
-# update_redmine_statuses "$issue_prs"
-# update_cache_with_new_pulls "$pr_json"
-
+	update_redmine_statuses "$issue_prs"
+	update_cache_with_new_pulls "$pr_json"
+}
 
 
 function exit_with_error () {
@@ -287,3 +286,4 @@ function parse_arguments () {
 
 
 parse_arguments "$@"
+main
