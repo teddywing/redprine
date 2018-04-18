@@ -22,6 +22,7 @@ function github_owner_repo () {
 	echo "$owner_repo"
 }
 
+# Get a list of open pull requests from the GitHub API.
 function fetch_pull_requests () {
 	local owner_repo=$(github_owner_repo)
 	local pull_requests=$(curl \
@@ -33,6 +34,7 @@ function fetch_pull_requests () {
 	echo "$pull_requests"
 }
 
+# Stores pull requests to the cache file.
 function cache_my_pull_requests () {
 	local pull_requests="$1"
 
@@ -54,6 +56,8 @@ function cache_my_pull_requests () {
 	echo "$my_pull_requests" > "$CACHE_FILE"
 }
 
+# Fetches the latest pull requests from GitHub and gets a list of those that
+# aren't in our cache file.
 function new_pull_requests () {
 	local pull_requests=$(fetch_pull_requests)
 
@@ -64,6 +68,9 @@ function new_pull_requests () {
 	echo "$new"
 }
 
+# Filters JSON pull requests from the GitHub API including only those for the
+# requested username. The result is a JSON array of hashes containing only a
+# few relevant pull request fields.
 function extract_data_from_pull_request_json () {
 	local pull_requests="$1"
 
@@ -98,6 +105,8 @@ function extract_redmine_issue_numbers_from_pull_request () {
 	echo "$issue_ids"
 }
 
+# Produces a tab-separated list of branch names and pull request URLs from our
+# extracted JSON.
 function branches_and_pull_request_urls () {
 	local pull_requests="$1"
 
@@ -105,6 +114,9 @@ function branches_and_pull_request_urls () {
 		jq --raw-output 'map([.ref, .html_url]) | .[] | @tsv'
 }
 
+# Turns a tab-separated list of branch names and pull request URLs into a
+# tab-separated list of Redmine issue numbers and pull request URLs. Gets the
+# issue number as a four-digit prefix of the branch name.
 function issue_numbers_and_pull_request_urls () {
 	local pull_requests="$1"
 
@@ -114,7 +126,7 @@ function issue_numbers_and_pull_request_urls () {
 		perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
 }
 
-# Updates the "Done", "Status", and "Pull Request" fields for each given issue.
+# Updates fields for each given issue.
 function update_redmine_statuses () {
 	local issue_ids_and_urls="$1"
 
@@ -125,6 +137,8 @@ function update_redmine_statuses () {
 	fi
 }
 
+# Given a tab-separated Redmine issue number and GitHub pull request URL, will
+# update fields on the given issue.
 function update_redmine_status () {
 	local issue_pr="$1"
 
@@ -165,6 +179,7 @@ function update_redmine_status () {
 	# curl -s -o /dev/null -I -w "%{http_code}" http://www.example.org/
 }
 
+# Updates the cache file appending new pull requests in our JSON format.
 function update_cache_with_new_pulls () {
 	local new_pull_requests="$1"
 
