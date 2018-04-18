@@ -187,6 +187,10 @@ function exit_with_error () {
 
 function preflight () {
 	mkdir -p "$REDPRINE_DATA_DIR"
+
+	if [ ! -f "$CACHE_FILE" ]; then
+		echo '[]' > "$CACHE_FILE"
+	fi
 }
 
 function argument_error () {
