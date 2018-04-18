@@ -13,6 +13,21 @@ REDMINE_TOKEN=''
 
 CACHE_FILE="$HOME/redprine.json"
 
+
+function print_usage () {
+	cat 1>&2 <<__EOF__
+Usage: redprine --github-token TOKEN --github-username USERNAME --redmine-base-url URL --redmine-token TOKEN
+
+Flags:
+      --github-token=TOKEN        GitHub API token with pull request access.
+      --github-username=USERNAME  GitHub username.
+      --redmine-base-url=URL      Base Redmine URL (e.g. 'https://redmine.eaglejump.co')
+      --redmine-token=TOKEN       Redmine account API key
+  -h, --help                      Show this help.
+  -v, --version                   Show application version.
+__EOF__
+}
+
 function github_owner_repo () {
 	local git_remote=$(git remote get-url origin)
 	local owner_repo=$(echo "$git_remote" |
