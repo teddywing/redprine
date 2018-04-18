@@ -175,16 +175,11 @@ function update_cache_with_new_pulls () {
 # update_cache_with_new_pulls "$pr_json"
 
 
-function echo_error () {
-	local message="$1"
-
-	echo "redprine: error: $message" 1>&2
-}
 
 function exit_with_error () {
 	local message="$1"
 
-	echo_error "$message"
+	echo "redprine: error: $message" 1>&2
 
 	exit 1
 }
@@ -192,7 +187,7 @@ function exit_with_error () {
 function argument_error () {
 	local flag="$1"
 
-	echo_error "Required argument '$flag' not provided, try --help"
+	exit_with_error "Required argument '$flag' not provided, try --help"
 }
 
 function check_required_argument () {
