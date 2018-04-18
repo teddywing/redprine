@@ -86,42 +86,51 @@ function extract_data_from_pull_request_json () {
 			)'
 }
 
-# Produces a tab-separated list of branch names and pull request URLs from our
-# extracted JSON.
-function branches_and_pull_request_urls () {
+# Produces a tab-separated branch name and pull request URL from our pull
+# request JSON.
+function branch_and_pull_request_url () {
+	local pull_request="$1"
+
+	printf "%s\n" "$pull_request" |
+		jq --raw-output '[.ref, .html_url] | @tsv'
+}
+
+# Turns a tab-separated branch name and pull request URL into a tab-separated
+# Redmine issue number and pull request URL. Gets the issue number as a
+# four-digit prefix of the branch name.
+function issue_number_and_pull_request_url () {
+	local pull_request="$1"
+
+	local branch_and_url=$(branch_and_pull_request_url "$pull_request")
+
+	echo "$branch_and_url" |
+		perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
+}
+
+# Takes a JSON array of Redprine pull request hashes and outputs one hash per
+# line so the hashes can be iterated over in a shell loop.
+function each_pull_request () {
 	local pull_requests="$1"
 
 	printf "%s\n" "$pull_requests" |
-		jq --raw-output 'map([.ref, .html_url]) | .[] | @tsv'
-}
-
-# Turns a tab-separated list of branch names and pull request URLs into a
-# tab-separated list of Redmine issue numbers and pull request URLs. Gets the
-# issue number as a four-digit prefix of the branch name.
-function issue_numbers_and_pull_request_urls () {
-	local pull_requests="$1"
-
-	local branch_and_urls=$(branches_and_pull_request_urls "$pull_requests")
-
-	echo "$branch_and_urls" |
-		perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
+		jq --compact-output '. | .[]'
 }
 
 # Updates fields for each given issue.
 function update_redmine_statuses () {
-	local issue_ids_and_urls="$1"
+	local pull_requests="$1"
 
-	if [ ! -z "$issue_ids_and_urls" ]; then
-		for id_and_url in "$issue_ids_and_urls"; do
-			update_redmine_status "$id_and_url"
-		done
-	fi
+	for pull_request in $(each_pull_request "$pull_requests"); do
+		update_redmine_status "$pull_request"
+	done
 }
 
 # Given a tab-separated Redmine issue number and GitHub pull request URL, will
 # update fields on the given issue.
 function update_redmine_status () {
-	local issue_pr="$1"
+	local pull_request="$1"
+
+	local issue_pr=$(issue_number_and_pull_request_url "$pull_request")
 
 	local issue_id=$(
 		echo "$issue_pr" |
@@ -173,9 +182,8 @@ function update_cache_with_new_pulls () {
 
 function main () {
 	local pr_json=$(new_pull_requests)
-	local issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
 
-	update_redmine_statuses "$issue_prs"
+	update_redmine_statuses "$pr_json"
 	update_cache_with_new_pulls "$pr_json"
 }
 
