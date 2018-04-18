@@ -32,23 +32,13 @@ Flags:
 __EOF__
 }
 
-function github_owner_repo () {
-	local git_remote=$(git remote get-url origin)
-	local owner_repo=$(echo "$git_remote" |
-		sed -e 's/git@github.com://' \
-			-e 's/.git$//')
-
-	echo "$owner_repo"
-}
-
 # Get a list of open pull requests from the GitHub API.
 function fetch_pull_requests () {
-	local owner_repo=$(github_owner_repo)
 	local pull_requests=$(curl \
 		--silent \
 		--header 'Accept:application/vnd.github.v3+json' \
 		--header "Authorization: Bearer ${GITHUB_TOKEN}" \
-		--location "https://api.github.com/repos/${owner_repo}/pulls")
+		--location "https://api.github.com/repos/${GITHUB_OWNER_REPO}/pulls")
 
 	echo "$pull_requests"
 }
