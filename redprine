@@ -51,7 +51,7 @@ function cache_my_pull_requests () {
 			)'
 	)
 
-	echo $my_pull_requests > "$CACHE_FILE"
+	echo "$my_pull_requests" > "$CACHE_FILE"
 }
 
 function new_pull_requests () {
