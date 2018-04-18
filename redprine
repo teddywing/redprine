@@ -174,8 +174,114 @@ function update_cache_with_new_pulls () {
 
 
 
-pr_json=$(new_pull_requests)
-issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
+# pr_json=$(new_pull_requests)
+# issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
+#
+# update_redmine_statuses "$issue_prs"
+# update_cache_with_new_pulls "$pr_json"
 
-update_redmine_statuses "$issue_prs"
-update_cache_with_new_pulls "$pr_json"
+
+function echo_error () {
+	local message="$1"
+
+	echo "redprine: error: $message" 1>&2
+}
+
+function exit_with_error () {
+	local message="$1"
+
+	echo_error "$message"
+
+	exit 1
+}
+
+function argument_error () {
+	local flag="$1"
+
+	echo_error "Required argument '$flag' not provided, try --help"
+}
+
+function check_required_argument () {
+	local flag="$1"
+	local variable="$2"
+
+	if [ -z "$variable" ]; then
+		argument_error "$flag"
+	fi
+}
+
+function parse_arguments () {
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--github-token)
+			GITHUB_TOKEN="$2"
+
+			shift 2
+			continue
+			;;
+		--github-token=*)
+			GITHUB_TOKEN="${1##--github-token=}"
+
+			shift
+			continue
+			;;
+		--github-username)
+			GITHUB_USERNAME="$2"
+
+			shift 2
+			continue
+			;;
+		--github-username=*)
+			GITHUB_USERNAME="${1##--github-username=}"
+
+			shift
+			continue
+			;;
+		--redmine-base-url)
+			REDMINE_BASE_URL="$2"
+
+			shift 2
+			continue
+			;;
+		--redmine-base-url=*)
+			REDMINE_BASE_URL="${1##--redmine-base-url=}"
+
+			shift
+			continue
+			;;
+		--redmine-token)
+			REDMINE_TOKEN="$2"
+
+			shift 2
+			continue
+			;;
+		--redmine-token=*)
+			REDMINE_TOKEN="${1##--redmine-token=}"
+
+			shift
+			continue
+			;;
+		-h | --help)
+			print_usage
+
+			exit 0
+			;;
+		-v | --version)
+			echo 'TODO'
+
+			exit 0
+			;;
+		*)
+			exit_with_error "Unrecognised argument '$1', try --help"
+			;;
+		esac
+	done
+
+	check_required_argument '--github-token' "$GITHUB_TOKEN"
+	check_required_argument '--github-username' "$GITHUB_USERNAME"
+	check_required_argument '--redmine-base-url' "$REDMINE_BASE_URL"
+	check_required_argument '--redmine-token' "$REDMINE_TOKEN"
+}
+
+
+parse_arguments "$@"
