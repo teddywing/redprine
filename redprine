@@ -38,20 +38,7 @@ function fetch_pull_requests () {
 function cache_my_pull_requests () {
 	local pull_requests="$1"
 
-	local my_pull_requests=$(
-		printf "%s\n" "$pull_requests" |
-		jq '. |
-			map({
-				html_url,
-				number,
-				user: .user.login,
-				ref: .head.ref,
-				created_at
-			}) |
-			map(
-				select(.user == "teddywing")
-			)'
-	)
+	local my_pull_requests=$(extract_data_from_pull_request_json "$pull_requests")
 
 	echo "$my_pull_requests" > "$CACHE_FILE"
 }
