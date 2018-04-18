@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Redprine
+#
+# Downloads and caches GitHub PRs. Update the associated Redmine issue of any
+# new PRs authored by the owner.
+
+GITHUB_TOKEN=''
+GITHUB_USERNAME=''
+
+REDMINE_BASE_URL=''
+
+function github_owner_repo () {
+	local git_remote=$(git remote get-url origin)
+	local owner_repo=$(echo "$git_remote" |
+		sed -e 's/git@github.com://' \
+			-e 's/.git$//')
+
+	echo "$owner_repo"
+}
+
+function fetch_pull_requests () {
+	owner_repo=$(github_owner_repo)
+	pull_requests=$(curl \
+		--silent \
+		--header 'Accept:application/vnd.github.v3+json' \
+		--header "Authorization: Bearer ${GITHUB_TOKEN}" \
+		--location "https://api.github.com/repos/${owner_repo}/pulls")
+
+	echo $pull_requests
+}
+
+# fetch_pull_requests
+
+function cache_my_pull_requests () {
+	pull_requests="$1"
+
+	my_pull_requests=$(
+		printf "%s\n" "$pull_requests" |
+		jq '. |
+			map({
+				html_url,
+				number,
+				user: .user.login,
+				ref: .head.ref,
+				created_at
+			}) |
+			map(
+				select(.user == "teddywing")
+			)'
+	)
+
+	echo $my_pull_requests
+}
+
+# branch_heads=$(printf "%s\n" "$pull_requests" |
+# 	jq '. | map([.["html_url"], .["head"]["label"]]) | .[] | @tsv' --raw-output)
+
+# jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at })' pulls.json
+# jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing"))' pulls.json
+
+pull_requests=$(fetch_pull_requests)
+cache_my_pull_requests "$pull_requests"
+
+# function compare_with_cache () {
+function new_pull_requests () {
+	pull_requests=$(fetch_pull_requests)
+
+	new=$(jq "${pull_requests} - ." "$CACHE_FILE")
+
+	echo "$new"
+}
+
+# jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - .' pulls-my.json  #=> []
+# jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - . | length' pulls-my.json  #=> 0
+
+function extract_redmine_issue_numbers_from_pull_request () {
+	pull_requests="$1"
+
+	branch_names=$(
+		printf "%s\n" "$pull_requests" |
+		jq --raw-output 'map(.ref) | .[] | @text'
+	)
+
+	# Issue IDs are 4-digit prefixes to branch names.
+	issue_ids=$(
+		echo "$branch_names" |
+		perl -ne '/^(\d{4})-/ && print "$1\n"'
+	)
+
+	echo "$issue_ids"
+}
+
+# jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json
+# jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json | perl -ne '/^(\d{4})-/ && print "$1\n"'
+
+# Updates the "Done", "Status", and "Pull Request" fields for each given issue.
+function update_redmine_statuses () {
+	issue_ids="$1"
+
+	for id in "$issue_ids"; do
+		update_redmine_status "$id"
+	done
+}
+
+function update_redmine_status () {
+	issue_id="$1"
+
+	curl \
+		--request PUT \
+		--location "${REDMINE_BASE_URL}/issues/${issue_id}.json"
+}
