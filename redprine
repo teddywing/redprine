@@ -13,8 +13,6 @@ REDMINE_TOKEN=''
 
 CACHE_FILE="$HOME/redprine.json"
 
-NEW_PRS=''
-
 function github_owner_repo () {
 	local git_remote=$(git remote get-url origin)
 	local owner_repo=$(echo "$git_remote" |
@@ -193,7 +191,9 @@ function update_redmine_status () {
 }
 
 function update_cache_with_new_pulls () {
-	jq "${NEW_PRS} + ." "$CACHE_FILE" > "${CACHE_FILE}.new"
+	local new_pull_requests="$1"
+
+	jq "$new_pull_requests" "$CACHE_FILE" > "${CACHE_FILE}.new"
 	mv "${CACHE_FILE}.new" "$CACHE_FILE"
 }
 
@@ -202,8 +202,7 @@ function update_cache_with_new_pulls () {
 # pull_requests=$(fetch_pull_requests)
 # cache_my_pull_requests "$pull_requests"
 pr_json=$(new_pull_requests)
-NEW_PRS="$pr_json"
 issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
 
 update_redmine_statuses "$issue_prs"
-update_cache_with_new_pulls
+update_cache_with_new_pulls "$pr_json"
