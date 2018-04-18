@@ -160,8 +160,26 @@ function update_redmine_status () {
 		cut -d '	' -f 2 -
 	)
 
+	# status_id=14  # Review
+	# done_ratio=100
+	# issue[custom_field_values][11]  # Pull Request
+	local json="{
+		\"issue\": {
+			\"status_id\": 14,
+			\"done_ratio\": 100,
+			\"custom_field_values\": {
+				\"11\": \"$pull_request_link\"
+			}
+		}
+	}"
+
+	# echo "$json"
+	# echo  "${REDMINE_BASE_URL}/issues/${issue_id}.json"
 	curl \
+		--verbose \
+		--header 'Content-Type: application/json' \
 		--request PUT \
+		--data "$json" \
 		--location "${REDMINE_BASE_URL}/issues/${issue_id}.json"
 }
 
