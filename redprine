@@ -88,23 +88,6 @@ function extract_data_from_pull_request_json () {
 			)'
 }
 
-function extract_redmine_issue_numbers_from_pull_request () {
-	local pull_requests="$1"
-
-	local branch_names=$(
-		printf "%s\n" "$pull_requests" |
-		jq --raw-output 'map(.ref) | .[] | @text'
-	)
-
-	# Issue IDs are 4-digit prefixes to branch names.
-	local issue_ids=$(
-		echo "$branch_names" |
-		perl -ne '/^(\d{4})-/ && print "$1\n"'
-	)
-
-	echo "$issue_ids"
-}
-
 # Produces a tab-separated list of branch names and pull request URLs from our
 # extracted JSON.
 function branches_and_pull_request_urls () {
