@@ -12,7 +12,9 @@ GITHUB_OWNER_REPO=''
 REDMINE_BASE_URL=''
 REDMINE_TOKEN=''
 
-CACHE_FILE="$HOME/redprine.json"
+XDG_DATA_HOME=${XDG_DATA_HOME:-"${HOME}/.local/share"}
+REDPRINE_DATA_DIR=${REDPRINE_DATA_DIR:-"${XDG_DATA_HOME}/redprine"}
+CACHE_FILE="${REDPRINE_DATA_DIR}/${GITHUB_OWNER_REPO/\//--}.json"
 
 
 function print_usage () {
@@ -183,6 +185,10 @@ function exit_with_error () {
 	exit 1
 }
 
+function preflight () {
+	mkdir -p "$REDPRINE_DATA_DIR"
+}
+
 function argument_error () {
 	local flag="$1"
 
@@ -285,5 +291,6 @@ function parse_arguments () {
 }
 
 
+preflight
 parse_arguments "$@"
 main
