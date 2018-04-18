@@ -20,8 +20,8 @@ function github_owner_repo () {
 }
 
 function fetch_pull_requests () {
-	owner_repo=$(github_owner_repo)
-	pull_requests=$(curl \
+	local owner_repo=$(github_owner_repo)
+	local pull_requests=$(curl \
 		--silent \
 		--header 'Accept:application/vnd.github.v3+json' \
 		--header "Authorization: Bearer ${GITHUB_TOKEN}" \
@@ -33,9 +33,9 @@ function fetch_pull_requests () {
 # fetch_pull_requests
 
 function cache_my_pull_requests () {
-	pull_requests="$1"
+	local pull_requests="$1"
 
-	my_pull_requests=$(
+	local my_pull_requests=$(
 		printf "%s\n" "$pull_requests" |
 		jq '. |
 			map({
@@ -64,9 +64,9 @@ cache_my_pull_requests "$pull_requests"
 
 # function compare_with_cache () {
 function new_pull_requests () {
-	pull_requests=$(fetch_pull_requests)
+	local pull_requests=$(fetch_pull_requests)
 
-	new=$(jq "${pull_requests} - ." "$CACHE_FILE")
+	local new=$(jq "${pull_requests} - ." "$CACHE_FILE")
 
 	echo "$new"
 }
@@ -75,15 +75,15 @@ function new_pull_requests () {
 # jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - . | length' pulls-my.json  #=> 0
 
 function extract_redmine_issue_numbers_from_pull_request () {
-	pull_requests="$1"
+	local pull_requests="$1"
 
-	branch_names=$(
+	local branch_names=$(
 		printf "%s\n" "$pull_requests" |
 		jq --raw-output 'map(.ref) | .[] | @text'
 	)
 
 	# Issue IDs are 4-digit prefixes to branch names.
-	issue_ids=$(
+	local issue_ids=$(
 		echo "$branch_names" |
 		perl -ne '/^(\d{4})-/ && print "$1\n"'
 	)
@@ -96,7 +96,7 @@ function extract_redmine_issue_numbers_from_pull_request () {
 
 # Updates the "Done", "Status", and "Pull Request" fields for each given issue.
 function update_redmine_statuses () {
-	issue_ids="$1"
+	local issue_ids="$1"
 
 	for id in "$issue_ids"; do
 		update_redmine_status "$id"
@@ -104,7 +104,7 @@ function update_redmine_statuses () {
 }
 
 function update_redmine_status () {
-	issue_id="$1"
+	local issue_id="$1"
 
 	curl \
 		--request PUT \
