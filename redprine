@@ -5,6 +5,8 @@
 # Downloads and caches GitHub PRs. Update the associated Redmine issue of any
 # new PRs authored by the owner.
 
+VERSION='0.0.1'
+
 GITHUB_TOKEN=''
 GITHUB_USERNAME=''
 GITHUB_OWNER_REPO=''
@@ -309,7 +311,7 @@ function parse_arguments () {
 			exit 0
 			;;
 		-v | --version)
-			echo 'TODO'
+			echo $VERSION
 
 			exit 0
 			;;
