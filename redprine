@@ -33,8 +33,6 @@ function fetch_pull_requests () {
 	echo $pull_requests
 }
 
-# fetch_pull_requests
-
 function cache_my_pull_requests () {
 	local pull_requests="$1"
 
@@ -56,29 +54,15 @@ function cache_my_pull_requests () {
 	echo $my_pull_requests > "$CACHE_FILE"
 }
 
-# branch_heads=$(printf "%s\n" "$pull_requests" |
-# 	jq '. | map([.["html_url"], .["head"]["label"]]) | .[] | @tsv' --raw-output)
-
-# jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at })' pulls.json
-# jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing"))' pulls.json
-
-# pull_requests=$(fetch_pull_requests)
-# cache_my_pull_requests "$pull_requests"
-
-# function compare_with_cache () {
 function new_pull_requests () {
 	local pull_requests=$(fetch_pull_requests)
 
 	local my_prs=$(extract_data_from_pull_request_json "$pull_requests")
-	# echo "$my_prs"
 
 	local new=$(jq "${my_prs} - ." "$CACHE_FILE")
 
 	echo "$new"
 }
-
-# jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - .' pulls-my.json  #=> []
-# jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - . | length' pulls-my.json  #=> 0
 
 function extract_data_from_pull_request_json () {
 	local pull_requests="$1"
@@ -114,11 +98,6 @@ function extract_redmine_issue_numbers_from_pull_request () {
 	echo "$issue_ids"
 }
 
-# jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json
-# jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json | perl -ne '/^(\d{4})-/ && print "$1\n"'
-
-# jq --raw-output '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing")) | map([.ref, .html_url]) | .[] | @tsv' pulls.json
-
 function branches_and_pull_request_urls () {
 	local pull_requests="$1"
 
@@ -134,8 +113,6 @@ function issue_numbers_and_pull_request_urls () {
 	echo "$branch_and_urls" |
 		perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
 }
-
-# jq --raw-output '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing")) | map([.ref, .html_url]) | .[] | @tsv' pulls.json | perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
 
 # Updates the "Done", "Status", and "Pull Request" fields for each given issue.
 function update_redmine_statuses () {
@@ -174,8 +151,6 @@ function update_redmine_status () {
 		}
 	}"
 
-	# echo "$json"
-	# echo  "${REDMINE_BASE_URL}/issues/${issue_id}.json"
 	curl \
 		--verbose \
 		--header 'Content-Type: application/json' \
@@ -199,8 +174,6 @@ function update_cache_with_new_pulls () {
 
 
 
-# pull_requests=$(fetch_pull_requests)
-# cache_my_pull_requests "$pull_requests"
 pr_json=$(new_pull_requests)
 issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
 
