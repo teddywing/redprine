@@ -140,9 +140,11 @@ function issue_numbers_and_pull_request_urls () {
 function update_redmine_statuses () {
 	local issue_ids_and_urls="$1"
 
-	for id_and_url in "$issue_ids_and_urls"; do
-		update_redmine_status "$id_and_url"
-	done
+	if [ ! -z "$issue_ids_and_urls" ]; then
+		for id_and_url in "$issue_ids_and_urls"; do
+			update_redmine_status "$id_and_url"
+		done
+	fi
 }
 
 function update_redmine_status () {
