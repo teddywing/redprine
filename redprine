@@ -146,18 +146,21 @@ function update_redmine_status () {
 		}
 	}"
 
-	curl \
-		--verbose \
-		--header 'Content-Type: application/json' \
-		--header "X-Redmine-API-Key: $REDMINE_TOKEN" \
-		--request PUT \
-		--data "$json" \
-		--location "${REDMINE_BASE_URL}/issues/${issue_id}.json"
+	local status_code=$(
+		curl \
+			--output /dev/null \
+			--head \
+			--write-out '%{http_code}' \
+			--header 'Content-Type: application/json' \
+			--header "X-Redmine-API-Key: $REDMINE_TOKEN" \
+			--request PUT \
+			--data "$json" \
+			--location "${REDMINE_BASE_URL}/issues/${issue_id}.json"
+	)
 
-	# Output an error message if the request fails
-	# https://superuser.com/questions/272265/getting-curl-to-output-http-status-code/442395#442395
-	# curl -s -o /dev/null -w "%{http_code}" http://www.example.org/
-	# curl -s -o /dev/null -I -w "%{http_code}" http://www.example.org/
+	if [ "$status_code" != '200' ]; then
+		exit_with_error "Redmine API error, status code $status_code"
+	fi
 }
 
 # Updates the cache file appending new pull requests in our JSON format.
