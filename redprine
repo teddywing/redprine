@@ -11,6 +11,7 @@ GITHUB_OWNER_REPO=''
 
 REDMINE_BASE_URL=''
 REDMINE_TOKEN=''
+REDMINE_JSON_PARAMS=''
 
 XDG_DATA_HOME=${XDG_DATA_HOME:-"${HOME}/.local/share"}
 REDPRINE_DATA_DIR=${REDPRINE_DATA_DIR:-"${XDG_DATA_HOME}/redprine"}
@@ -19,7 +20,7 @@ CACHE_FILE="${REDPRINE_DATA_DIR}/${GITHUB_OWNER_REPO/\//--}.json"
 
 function print_usage () {
 	cat 1>&2 <<__EOF__
-Usage: redprine --github-token TOKEN --github-username USERNAME --github-owner-repo OWNER_REPO --redmine-base-url URL --redmine-token TOKEN
+Usage: redprine --github-token TOKEN --github-username USERNAME --github-owner-repo OWNER_REPO --redmine-base-url URL --redmine-token TOKEN --redmine-json-params EXEC
 
 Flags:
       --github-token=TOKEN            GitHub API token with pull request access.
@@ -29,6 +30,9 @@ Flags:
       --redmine-base-url=URL          Base Redmine URL
                                       (e.g. 'https://redmine.eaglejump.co').
       --redmine-token=TOKEN           Redmine account API key
+      --redmine-json-params=EXEC      Bash-executable string that outputs JSON
+                                      as a parameter for updating issues.
+                                      Argument '\$0' is the pull request URL.
   -h, --help                          Show this help.
   -v, --version                       Show application version.
 __EOF__
@@ -142,18 +146,7 @@ function update_redmine_status () {
 		cut -d '	' -f 2 -
 	)
 
-	# status_id=14  # Review
-	# done_ratio=100
-	# issue[custom_field_values][11]  # Pull Request
-	local json="{
-		\"issue\": {
-			\"status_id\": 14,
-			\"done_ratio\": 100,
-			\"custom_field_values\": {
-				\"11\": \"$pull_request_link\"
-			}
-		}
-	}"
+	local json=$(bash -c "$REDMINE_JSON_PARAMS" "$pull_request_link")
 
 	local status_code=$(
 		curl \
@@ -284,6 +277,18 @@ function parse_arguments () {
 			shift
 			continue
 			;;
+		--redmine-json-params)
+			REDMINE_JSON_PARAMS="$2"
+
+			shift 2
+			continue
+			;;
+		--redmine-json-params=*)
+			REDMINE_JSON_PARAMS="${1##--redmine-json-params=}"
+
+			shift
+			continue
+			;;
 		-h | --help)
 			print_usage
 
@@ -305,6 +310,7 @@ function parse_arguments () {
 	check_required_argument '--github-owner-repo' "$GITHUB_OWNER_REPO"
 	check_required_argument '--redmine-base-url' "$REDMINE_BASE_URL"
 	check_required_argument '--redmine-token' "$REDMINE_TOKEN"
+	check_required_argument '--redmine-json-params' "$REDMINE_JSON_PARAMS"
 }
 
 
