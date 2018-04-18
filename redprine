@@ -17,6 +17,8 @@ XDG_DATA_HOME=${XDG_DATA_HOME:-"${HOME}/.local/share"}
 REDPRINE_DATA_DIR=${REDPRINE_DATA_DIR:-"${XDG_DATA_HOME}/redprine"}
 CACHE_FILE="${REDPRINE_DATA_DIR}/${GITHUB_OWNER_REPO/\//--}.json"
 
+CACHE_ONLY=0
+
 
 function print_usage () {
 	cat 1>&2 <<__EOF__
@@ -33,6 +35,9 @@ Flags:
       --redmine-json-params=EXEC      Bash-executable string that outputs JSON
                                       as a parameter for updating issues.
                                       Argument '\$0' is the pull request URL.
+      --cache-only                    Tells the program not to make update
+                                      requests to Redmine, just save PRs to
+                                      cache.
   -h, --help                          Show this help.
   -v, --version                       Show application version.
 __EOF__
@@ -176,6 +181,12 @@ function update_cache_with_new_pull () {
 }
 
 function main () {
+	if [ "$CACHE_ONLY" -eq 1 ]; then
+		cache_my_pull_requests "$(fetch_pull_requests)"
+
+		exit
+	fi
+
 	local pr_json=$(new_pull_requests)
 
 	update_redmine_statuses "$pr_json"
@@ -288,6 +299,9 @@ function parse_arguments () {
 
 			shift
 			continue
+			;;
+		--cache-only)
+			CACHE_ONLY=1
 			;;
 		-h | --help)
 			print_usage
