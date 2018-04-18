@@ -61,8 +61,8 @@ function cache_my_pull_requests () {
 # jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at })' pulls.json
 # jq -C '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing"))' pulls.json
 
-pull_requests=$(fetch_pull_requests)
-cache_my_pull_requests "$pull_requests"
+# pull_requests=$(fetch_pull_requests)
+# cache_my_pull_requests "$pull_requests"
 
 # function compare_with_cache () {
 function new_pull_requests () {
@@ -96,19 +96,58 @@ function extract_redmine_issue_numbers_from_pull_request () {
 # jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json
 # jq --raw-output 'map(.ref) | .[] | @text' pulls-my.json | perl -ne '/^(\d{4})-/ && print "$1\n"'
 
+# jq --raw-output '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing")) | map([.ref, .html_url]) | .[] | @tsv' pulls.json
+
+function branches_and_pull_request_urls () {
+	local pull_requests="$1"
+
+	printf "%s\n" "$pull_requests" |
+		jq --raw-output 'map([.ref, .html_url]) | .[] | @tsv'
+}
+
+function issue_numbers_and_pull_request_urls () {
+	local pull_requests="$1"
+
+	local branch_and_urls=$(branches_and_pull_request_urls "$pull_requests")
+
+	echo "$branch_and_urls" |
+		perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
+}
+
+# jq --raw-output '. | map({ html_url, number, user: .user.login, ref: .head.ref, created_at }) | map(select(.user == "teddywing")) | map([.ref, .html_url]) | .[] | @tsv' pulls.json | perl -ne '/^(\d{4})-[^\t]*\t(.*)/ && print "$1\t$2\n"'
+
 # Updates the "Done", "Status", and "Pull Request" fields for each given issue.
 function update_redmine_statuses () {
-	local issue_ids="$1"
+	local issue_ids_and_urls="$1"
 
-	for id in "$issue_ids"; do
-		update_redmine_status "$id"
+	for id_and_url in "$issue_ids_and_urls"; do
+		update_redmine_status "$id_and_url"
 	done
 }
 
 function update_redmine_status () {
-	local issue_id="$1"
+	local issue_pr="$1"
+
+	local issue_id=$(
+		echo "$issue_pr" |
+		cut -d '	' -f 1 -
+	)
+
+	local pull_request_link=$(
+		echo "$issue_pr" |
+		cut -d '	' -f 2 -
+	)
 
 	curl \
 		--request PUT \
 		--location "${REDMINE_BASE_URL}/issues/${issue_id}.json"
 }
+
+
+
+# pull_requests=$(fetch_pull_requests)
+# cache_my_pull_requests "$pull_requests"
+pr_json=$(new_pull_requests)
+issue_prs=$(issue_numbers_and_pull_request_urls "$pr_json")
+
+update_redmine_statuses "$issue_prs"
