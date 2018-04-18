@@ -30,7 +30,7 @@ function fetch_pull_requests () {
 		--header "Authorization: Bearer ${GITHUB_TOKEN}" \
 		--location "https://api.github.com/repos/${owner_repo}/pulls")
 
-	echo $pull_requests
+	echo "$pull_requests"
 }
 
 function cache_my_pull_requests () {
