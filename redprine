@@ -68,13 +68,33 @@ function cache_my_pull_requests () {
 function new_pull_requests () {
 	local pull_requests=$(fetch_pull_requests)
 
-	local new=$(jq "${pull_requests} - ." "$CACHE_FILE")
+	local my_prs=$(extract_data_from_pull_request_json "$pull_requests")
+	# echo "$my_prs"
+
+	local new=$(jq "${my_prs} - ." "$CACHE_FILE")
 
 	echo "$new"
 }
 
 # jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - .' pulls-my.json  #=> []
 # jq '[ { "html_url": "https://github.com/owner/repo/pull/487", "number": 487, "user": "teddywing", "ref": "9999-this-is-a-test", "created_at": "2018-04-16T16:17:52Z" } ] - . | length' pulls-my.json  #=> 0
+
+function extract_data_from_pull_request_json () {
+	local pull_requests="$1"
+
+	printf "%s\n" "$pull_requests" |
+		jq --compact-output '. |
+			map({
+				html_url,
+				number,
+				user: .user.login,
+				ref: .head.ref,
+				created_at
+			}) |
+			map(
+				select(.user == "teddywing")
+			)'
+}
 
 function extract_redmine_issue_numbers_from_pull_request () {
 	local pull_requests="$1"
