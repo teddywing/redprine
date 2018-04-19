@@ -192,7 +192,6 @@ function main () {
 	local pr_json=$(new_pull_requests)
 
 	update_redmine_statuses "$pr_json"
-	update_cache_with_new_pulls "$pr_json"
 }
 
 
