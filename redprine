@@ -93,7 +93,7 @@ function extract_data_from_pull_request_json () {
 				created_at
 			}) |
 			map(
-				select(.user == '"$GITHUB_USERNAME"')
+				select(.user == "'"$GITHUB_USERNAME"'")
 			)'
 }
 
