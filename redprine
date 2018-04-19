@@ -304,6 +304,9 @@ function parse_arguments () {
 			;;
 		--cache-only)
 			CACHE_ONLY=1
+
+			shift
+			continue
 			;;
 		-h | --help)
 			print_usage
