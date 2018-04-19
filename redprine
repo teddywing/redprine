@@ -157,6 +157,7 @@ function update_redmine_status () {
 
 	local status_code=$(
 		curl \
+			--silent \
 			--output /dev/null \
 			--write-out '%{http_code}' \
 			--header 'Content-Type: application/json' \
