@@ -17,7 +17,7 @@ REDMINE_JSON_PARAMS=''
 
 XDG_DATA_HOME=${XDG_DATA_HOME:-"${HOME}/.local/share"}
 REDPRINE_DATA_DIR=${REDPRINE_DATA_DIR:-"${XDG_DATA_HOME}/redprine"}
-CACHE_FILE="${REDPRINE_DATA_DIR}/${GITHUB_OWNER_REPO/\//--}.json"
+CACHE_FILE=''
 
 CACHE_ONLY=0
 
@@ -207,6 +207,8 @@ function exit_with_error () {
 function preflight () {
 	mkdir -p "$REDPRINE_DATA_DIR"
 
+	CACHE_FILE="${REDPRINE_DATA_DIR}/${GITHUB_OWNER_REPO/\//--}.json"
+
 	if [ ! -f "$CACHE_FILE" ]; then
 		echo '[]' > "$CACHE_FILE"
 	fi
@@ -333,6 +335,6 @@ function parse_arguments () {
 }
 
 
-preflight
 parse_arguments "$@"
+preflight
 main
