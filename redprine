@@ -158,7 +158,6 @@ function update_redmine_status () {
 	local status_code=$(
 		curl \
 			--output /dev/null \
-			--head \
 			--write-out '%{http_code}' \
 			--header 'Content-Type: application/json' \
 			--header "X-Redmine-API-Key: $REDMINE_TOKEN" \
