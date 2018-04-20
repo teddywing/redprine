@@ -45,6 +45,9 @@ executed with `bash -c`). A single argument is passed in `$0` containing the URL
 of the issue’s pull request. The format must match Redmine’s JSON parameter for
 the [issue update API endpoint][3].
 
+Pull request branches are assumed to start with a four-digit number followed by
+a hyphen (e.g. `1234-`), where the number is a Redmine issue ID.
+
 
 ## Install
 Requirements:
